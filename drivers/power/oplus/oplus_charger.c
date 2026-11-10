@@ -184,6 +184,7 @@ enum power_supply_property oplus_batt_props[] = {
 	POWER_SUPPLY_PROP_BATTERY_FCC,
 	POWER_SUPPLY_PROP_BATTERY_SOH,
 	POWER_SUPPLY_PROP_BATTERY_CC,
+	POWER_SUPPLY_PROP_CYCLE_COUNT,
 	POWER_SUPPLY_PROP_BATTERY_RM,
 	POWER_SUPPLY_PROP_BATTERY_NOTIFY_CODE,
 #ifdef CONFIG_OPLUS_SMART_CHARGER_SUPPORT
@@ -861,6 +862,9 @@ if (chip == NULL) {
 			val->intval = chip->batt_soh;
 			break;
 		case POWER_SUPPLY_PROP_BATTERY_CC:
+			val->intval = chip->batt_cc;
+			break;
+		case POWER_SUPPLY_PROP_CYCLE_COUNT:
 			val->intval = chip->batt_cc;
 			break;
 		case POWER_SUPPLY_PROP_BATTERY_RM:
