@@ -29,6 +29,7 @@
  * add for enable dc by default on special version */
 #include <soc/oppo/oppo_project.h>
 #include "ddp_dsi.h"
+#include "ddp_gamma.h"
 #include "fbconfig_kdebug.h"
 /*
  * we will create a sysfs which called /sys/kernel/oppo_display,
@@ -148,6 +149,40 @@ static ssize_t oppo_display_get_max_brightness(struct device *dev,
 {
 	//printk(KERN_INFO "oppo_display_get_max_brightness = %d\n",LED_FULL);
 	return sprintf(buf, "%u\n", LED_FULL);
+}
+
+static int oppo_rgb_r = 1024;
+static int oppo_rgb_g = 1024;
+static int oppo_rgb_b = 1024;
+
+static ssize_t oppo_display_get_rgb(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d %d %d\n", oppo_rgb_r, oppo_rgb_g, oppo_rgb_b);
+}
+
+static ssize_t oppo_display_set_rgb(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	int r = oppo_rgb_r, g = oppo_rgb_g, b = oppo_rgb_b;
+	int ret;
+
+	ret = sscanf(buf, "%d %d %d", &r, &g, &b);
+	if (ret < 3)
+		return -EINVAL;
+
+	if (r < 0) r = 0;
+	if (g < 0) g = 0;
+	if (b < 0) b = 0;
+	if (r > 2048) r = 2048;
+	if (g > 2048) g = 2048;
+	if (b > 2048) b = 2048;
+
+	oppo_rgb_r = r;
+	oppo_rgb_g = g;
+	oppo_rgb_b = b;
+	disp_ccorr_set_RGB_Gain(r, g, b);
+	return count;
 }
 
 static ssize_t oppo_get_aod_light_mode(struct device *dev,
@@ -1009,6 +1044,7 @@ static struct kobject *oppo_display_kobj;
 
 static DEVICE_ATTR(oppo_brightness, S_IRUGO|S_IWUSR, oppo_display_get_brightness, oppo_display_set_brightness);
 static DEVICE_ATTR(oppo_max_brightness, S_IRUGO|S_IWUSR, oppo_display_get_max_brightness, NULL);
+static DEVICE_ATTR(rgb, S_IRUGO|S_IWUSR, oppo_display_get_rgb, oppo_display_set_rgb);
 static DEVICE_ATTR(aod_light_mode_set, S_IRUGO|S_IWUSR, oppo_get_aod_light_mode, oppo_set_aod_light_mode);
 static DEVICE_ATTR(dim_alpha, S_IRUGO|S_IWUSR, oppo_display_get_dim_alpha, oppo_display_set_dim_alpha);
 static DEVICE_ATTR(dimlayer_bl_en, S_IRUGO|S_IWUSR, oppo_display_get_dc_enable, oppo_display_set_dc_enable);
@@ -1032,6 +1068,7 @@ static DEVICE_ATTR(aod_area, S_IRUGO|S_IWUSR, NULL, oppo_display_set_aod_area);
 static struct attribute *oppo_display_attrs[] = {
 	&dev_attr_oppo_brightness.attr,
 	&dev_attr_oppo_max_brightness.attr,
+	&dev_attr_rgb.attr,
 	&dev_attr_aod_light_mode_set.attr,
 	&dev_attr_dim_alpha.attr,
 	&dev_attr_dimlayer_bl_en.attr,
