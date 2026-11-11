@@ -3324,7 +3324,7 @@ int __init fbt_cpu_init(void)
 	vsync_period = GED_VSYNC_MISS_QUANTUM_NS;
 
 	fbt_idleprefer_enable = 1;
-	suppress_ceiling = 1;
+	suppress_ceiling = 0;
 	uclamp_boost_enable = 1;
 	down_throttle_ns = -1;
 	fbt_down_throttle_enable = 1;
