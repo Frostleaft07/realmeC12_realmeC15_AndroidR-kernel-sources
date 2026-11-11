@@ -111,6 +111,13 @@ config CPU_FREQ_DEFAULT_GOV_SCHEDUTIL
 	  have a look at the help section of that governor. The fallback
 	  governor will be 'performance'.
 
+config CPU_FREQ_DEFAULT_GOV_INTERACTIVE
+	bool "interactive"
+	select CPU_FREQ_GOV_INTERACTIVE
+	select CPU_FREQ_GOV_PERFORMANCE
+	help
+	  Use the 'interactive' CPUFreq governor by default.
+
 endchoice
 
 config CPU_FREQ_GOV_PERFORMANCE
@@ -189,6 +196,19 @@ config CPU_FREQ_GOV_CONSERVATIVE
 	  module will be called cpufreq_conservative.
 
 	  For details, take a look at linux/Documentation/cpu-freq.
+
+	  If in doubt, say N.
+
+config CPU_FREQ_GOV_INTERACTIVE
+	tristate "'interactive' cpufreq governor"
+	depends on CPU_FREQ
+	help
+	  'interactive' - This driver adds a dynamic cpufreq policy governor
+	  designed for latency-sensitive workloads.  It (re)sets the CPU
+	  frequency based on recent load, with boost support on input events.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called cpufreq_interactive.
 
 	  If in doubt, say N.
 
