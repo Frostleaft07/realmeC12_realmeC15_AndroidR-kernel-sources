@@ -924,6 +924,27 @@ schedtune_boostgroup_release(struct schedtune *st)
 	allocated_group[st->idx] = NULL;
 }
 
+static int
+schedtune_css_online(struct cgroup_subsys_state *css)
+{
+	struct schedtune *st = css_st(css);
+	char name[64];
+
+	if (!st || !css->cgroup)
+		return 0;
+
+	cgroup_name(css->cgroup, name, sizeof(name));
+
+	if (!strcmp(name, "top-app")) {
+		st->boost = 40;
+		st->prefer_idle = 1;
+		if (st->idx > 0)
+			schedtune_boostgroup_update(st->idx, 40);
+	}
+
+	return 0;
+}
+
 static void
 schedtune_css_free(struct cgroup_subsys_state *css)
 {
@@ -936,6 +957,7 @@ schedtune_css_free(struct cgroup_subsys_state *css)
 
 struct cgroup_subsys schedtune_cgrp_subsys = {
 	.css_alloc	= schedtune_css_alloc,
+	.css_online	= schedtune_css_online,
 	.css_free	= schedtune_css_free,
 	.can_attach     = schedtune_can_attach,
 	.cancel_attach  = schedtune_cancel_attach,
