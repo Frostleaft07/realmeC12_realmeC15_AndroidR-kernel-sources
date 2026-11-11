@@ -6013,7 +6013,11 @@ static int init_parse_dts(struct device *dev, struct touchpanel_data *ts)
 
     rc = of_property_read_u32_array(np, "touchpanel,sensitive-level", temp_array, SENSITIVE_LEVEL_NUM);
     if (rc) {
-        TPD_INFO("sensitive_level_array not specified %d\n", rc);
+        TPD_INFO("sensitive_level_array not specified %d, use defaults\n", rc);
+        ts->sensitive_level_array_support = true;
+        for (i=0; i < SENSITIVE_LEVEL_NUM; i++) {
+            ts->sensitive_level_array[i] = 100 + i * 20;
+        }
     } else {
         ts->sensitive_level_array_support = true;
         for (i=0; i < SENSITIVE_LEVEL_NUM; i++) {
