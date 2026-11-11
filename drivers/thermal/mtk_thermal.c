@@ -453,11 +453,20 @@ static int mtk_thermal_bank_temperature(struct mtk_thermal_bank *bank)
 	return max;
 }
 
+static int thermal_bypass = 0;
+module_param(thermal_bypass, int, 0644);
+MODULE_PARM_DESC(thermal_bypass, "Thermal bypass: 1 to ignore temp limits and disable throttling");
+
 static int mtk_read_temp(void *data, int *temperature)
 {
 	struct mtk_thermal *mt = data;
 	int i;
 	int tempmax = INT_MIN;
+
+	if (thermal_bypass) {
+		*temperature = 25000;
+		return 0;
+	}
 
 	for (i = 0; i < mt->conf->num_banks; i++) {
 		struct mtk_thermal_bank *bank = &mt->banks[i];
