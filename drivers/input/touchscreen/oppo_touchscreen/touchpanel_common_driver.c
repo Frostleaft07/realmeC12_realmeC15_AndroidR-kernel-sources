@@ -5,6 +5,8 @@
 
 #include <linux/uaccess.h>
 #include <linux/irq.h>
+#include <linux/cpufreq.h>
+#include <linux/sched.h>
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include <linux/task_work.h>
@@ -1362,8 +1364,35 @@ static enum hrtimer_restart touchpanel_timer_func(struct hrtimer *timer)
     return HRTIMER_NORESTART;
 }
 #else
+static void touch_input_boost(void)
+{
+	static ktime_t last_boost;
+	ktime_t now = ktime_get();
+	int cpu;
+
+	if (ktime_to_ms(ktime_sub(now, last_boost)) < 100)
+		return;
+	last_boost = now;
+
+	for_each_online_cpu(cpu) {
+		struct cpufreq_policy *policy = cpufreq_cpu_get(cpu);
+		if (policy) {
+			__cpufreq_driver_target(policy, policy->max,
+						CPUFREQ_RELATION_H);
+			cpufreq_cpu_put(policy);
+		}
+	}
+}
+
 static irqreturn_t tp_irq_thread_fn(int irq, void *dev_id)
 {
+	static int irq_prio_set;
+	if (!irq_prio_set) {
+		struct sched_param param = { .sched_priority = 90 };
+		sched_setscheduler(current, SCHED_FIFO, &param);
+		irq_prio_set = 1;
+	}
+	touch_input_boost();
     struct touchpanel_data *ts = (struct touchpanel_data *)dev_id;
     if (ts->ts_ops->tp_irq_throw_away) {
         if (ts->ts_ops->tp_irq_throw_away(ts->chip_data)) {
